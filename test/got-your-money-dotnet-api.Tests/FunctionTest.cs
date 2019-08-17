@@ -45,6 +45,7 @@ namespace got_your_money_dotnet_api.Tests
       Expense myExpense = new Expense();
       myExpense.Name = "The awesome post";
       myExpense.Cost = 5;
+      myExpense.PurchaseDate = DateTime.Parse("08/08/2019");
 
       request = new APIGatewayProxyRequest
       {
@@ -68,6 +69,7 @@ namespace got_your_money_dotnet_api.Tests
       Expense readExpense = JsonConvert.DeserializeObject<Expense>(response.Body);
       Assert.Equal(myExpense.Name, readExpense.Name);
       Assert.Equal(myExpense.Cost, readExpense.Cost);
+      Assert.Equal(myExpense.PurchaseDate, readExpense.PurchaseDate);
 
       // List the expenses
       request = new APIGatewayProxyRequest
@@ -81,6 +83,7 @@ namespace got_your_money_dotnet_api.Tests
       Assert.Single(expense);
       Assert.Equal(myExpense.Name, expense[0].Name);
       Assert.Equal(myExpense.Cost, expense[0].Cost);
+      Assert.Equal(myExpense.PurchaseDate, expense[0].PurchaseDate);
 
 
       // Delete the expense

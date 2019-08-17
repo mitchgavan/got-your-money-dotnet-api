@@ -10,6 +10,7 @@ namespace got_your_money_dotnet_api
     public string Id { get; set; }
     public string Name { get; set; }
     public double Cost { get; set; }
+    public DateTime PurchaseDate { get; set; }
     public DateTime CreatedTimestamp { get; set; }
   }
 }
