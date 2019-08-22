@@ -10,6 +10,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DocumentModel;
 
 using Newtonsoft.Json;
 
@@ -25,6 +26,8 @@ namespace got_your_money_dotnet_api
     const string TABLENAME_ENVIRONMENT_VARIABLE_LOOKUP = "ExpenseTable";
 
     public const string ID_QUERY_STRING_NAME = "Id";
+    public const string DATE_FROM_QUERY_STRING_NAME = "DateFrom";
+    public const string DATE_TO_QUERY_STRING_NAME = "DateTo";
     IDynamoDBContext DDBContext { get; set; }
 
     /// <summary>
@@ -68,8 +71,27 @@ namespace got_your_money_dotnet_api
     public async Task<APIGatewayProxyResponse> GetExpensesAsync(APIGatewayProxyRequest request, ILambdaContext context)
     {
       context.Logger.LogLine("Getting expenses");
-      var search = this.DDBContext.ScanAsync<Expense>(null);
-      var page = await search.GetNextSetAsync();
+
+      DateTime? dateFrom = null;
+      if (request.PathParameters != null && request.PathParameters.ContainsKey(DATE_FROM_QUERY_STRING_NAME))
+        dateFrom = DateTime.Parse(request.PathParameters[DATE_FROM_QUERY_STRING_NAME]);
+      else if (request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey(DATE_FROM_QUERY_STRING_NAME))
+        dateFrom = DateTime.Parse(request.QueryStringParameters[DATE_FROM_QUERY_STRING_NAME]);
+
+      var scanConfig = new List<ScanCondition>();
+
+      if (dateFrom != null)
+      {
+        scanConfig = new List<ScanCondition>()
+        {
+          new ScanCondition("PurchaseDate", ScanOperator.GreaterThanOrEqual, dateFrom)
+        };
+      }
+
+      var page = await this.DDBContext
+        .ScanAsync<Expense>(scanConfig)
+        .GetRemainingAsync();
+
       context.Logger.LogLine($"Found {page.Count} expenses");
 
       var response = new APIGatewayProxyResponse

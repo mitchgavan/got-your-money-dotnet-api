@@ -40,12 +40,11 @@ namespace got_your_money_dotnet_api.Tests
 
       Functions functions = new Functions(this.DDBClient, this.TableName);
 
-
       // Add a new expense
       Expense myExpense = new Expense();
       myExpense.Name = "The awesome post";
-      myExpense.Cost = 5;
-      myExpense.PurchaseDate = DateTime.Parse("08/08/2019");
+      myExpense.Cost = 3;
+      myExpense.PurchaseDate = DateTime.Parse("06/08/2019");
 
       request = new APIGatewayProxyRequest
       {
@@ -85,7 +84,6 @@ namespace got_your_money_dotnet_api.Tests
       Assert.Equal(myExpense.Cost, expense[0].Cost);
       Assert.Equal(myExpense.PurchaseDate, expense[0].PurchaseDate);
 
-
       // Delete the expense
       request = new APIGatewayProxyRequest
       {
@@ -103,6 +101,68 @@ namespace got_your_money_dotnet_api.Tests
       context = new TestLambdaContext();
       response = await functions.GetExpenseAsync(request, context);
       Assert.Equal((int)HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ExpensesFilterTestAsync()
+    {
+      TestLambdaContext context;
+      APIGatewayProxyRequest request;
+      APIGatewayProxyResponse response;
+
+      Functions functions = new Functions(this.DDBClient, this.TableName);
+
+      // Add a new expense
+      Expense myExpense = new Expense();
+      myExpense.Name = "Coffee";
+      myExpense.Cost = 3;
+      myExpense.PurchaseDate = DateTime.Parse("06/08/2019");
+
+      request = new APIGatewayProxyRequest
+      {
+        Body = JsonConvert.SerializeObject(myExpense)
+      };
+      context = new TestLambdaContext();
+      response = await functions.AddExpenseAsync(request, context);
+      Assert.Equal(200, response.StatusCode);
+
+      // Add another expense
+      Expense myExpense2 = new Expense();
+      myExpense2.Name = "Lunch";
+      myExpense2.Cost = 3;
+      myExpense2.PurchaseDate = DateTime.Parse("06/14/2019");
+
+      request = new APIGatewayProxyRequest
+      {
+        Body = JsonConvert.SerializeObject(myExpense2)
+      };
+      await functions.AddExpenseAsync(request, context);
+
+      // List the expenses
+      request = new APIGatewayProxyRequest
+      {
+      };
+      context = new TestLambdaContext();
+      response = await functions.GetExpensesAsync(request, context);
+      Assert.Equal(200, response.StatusCode);
+
+      Expense[] expense = JsonConvert.DeserializeObject<Expense[]>(response.Body);
+      Assert.Equal(2, expense.Count());
+
+      // List expenses with specified date range
+      request = new APIGatewayProxyRequest
+      {
+        PathParameters = new Dictionary<string, string> { { Functions.DATE_FROM_QUERY_STRING_NAME, "06/13/2019" } }
+      };
+      context = new TestLambdaContext();
+      response = await functions.GetExpensesAsync(request, context);
+      Assert.Equal(200, response.StatusCode);
+
+      expense = JsonConvert.DeserializeObject<Expense[]>(response.Body);
+      Assert.Single(expense);
+      Assert.Equal(myExpense2.Name, expense[0].Name);
+      Assert.Equal(myExpense2.Cost, expense[0].Cost);
+      Assert.Equal(myExpense2.PurchaseDate, expense[0].PurchaseDate);
     }
 
 
