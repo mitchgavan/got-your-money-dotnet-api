@@ -72,17 +72,12 @@ namespace got_your_money_dotnet_api
     {
       context.Logger.LogLine("Getting expenses");
 
-      DateTime? dateFrom = GetDateParam(request, DATE_FROM_QUERY_STRING_NAME);
+      DateTime dateFrom = GetDateParam(request, DATE_FROM_QUERY_STRING_NAME, DateTime.MinValue);
+
+      DateTime dateTo = GetDateParam(request, DATE_TO_QUERY_STRING_NAME, DateTime.MaxValue);
 
       var scanConfig = new List<ScanCondition>();
-
-      if (dateFrom != null)
-      {
-        scanConfig = new List<ScanCondition>()
-        {
-          new ScanCondition("PurchaseDate", ScanOperator.GreaterThanOrEqual, dateFrom)
-        };
-      }
+      scanConfig.Add(new ScanCondition("PurchaseDate", ScanOperator.Between, dateFrom, dateTo));
 
       var page = await this.DDBContext
         .ScanAsync<Expense>(scanConfig)
@@ -196,7 +191,7 @@ namespace got_your_money_dotnet_api
       };
     }
 
-    private DateTime? GetDateParam(APIGatewayProxyRequest request, string queryString)
+    private DateTime GetDateParam(APIGatewayProxyRequest request, string queryString, DateTime defaultDate)
     {
       if (request.PathParameters != null && request.PathParameters.ContainsKey(queryString))
       {
@@ -208,7 +203,7 @@ namespace got_your_money_dotnet_api
         return DateTime.Parse(request.QueryStringParameters[queryString]);
       }
 
-      return null;
+      return defaultDate;
     }
   }
 }

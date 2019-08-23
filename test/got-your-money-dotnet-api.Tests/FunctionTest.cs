@@ -126,7 +126,7 @@ namespace got_your_money_dotnet_api.Tests
       response = await functions.AddExpenseAsync(request, context);
       Assert.Equal(200, response.StatusCode);
 
-      // Add another expense
+      // Add second expense
       Expense myExpense2 = new Expense();
       myExpense2.Name = "Lunch";
       myExpense2.Cost = 3;
@@ -135,6 +135,18 @@ namespace got_your_money_dotnet_api.Tests
       request = new APIGatewayProxyRequest
       {
         Body = JsonConvert.SerializeObject(myExpense2)
+      };
+      await functions.AddExpenseAsync(request, context);
+
+      // Add third expense
+      Expense myExpense3 = new Expense();
+      myExpense3.Name = "Lunch";
+      myExpense3.Cost = 3;
+      myExpense3.PurchaseDate = DateTime.Parse("06/20/2019");
+
+      request = new APIGatewayProxyRequest
+      {
+        Body = JsonConvert.SerializeObject(myExpense3)
       };
       await functions.AddExpenseAsync(request, context);
 
@@ -147,12 +159,15 @@ namespace got_your_money_dotnet_api.Tests
       Assert.Equal(200, response.StatusCode);
 
       Expense[] expense = JsonConvert.DeserializeObject<Expense[]>(response.Body);
-      Assert.Equal(2, expense.Count());
+      Assert.Equal(3, expense.Count());
 
       // List expenses with specified date range
       request = new APIGatewayProxyRequest
       {
-        PathParameters = new Dictionary<string, string> { { Functions.DATE_FROM_QUERY_STRING_NAME, "06/13/2019" } }
+        PathParameters = new Dictionary<string, string> {
+          { Functions.DATE_FROM_QUERY_STRING_NAME, "06/13/2019" },
+          { Functions.DATE_TO_QUERY_STRING_NAME, "06/19/2019"}
+        }
       };
       context = new TestLambdaContext();
       response = await functions.GetExpensesAsync(request, context);
