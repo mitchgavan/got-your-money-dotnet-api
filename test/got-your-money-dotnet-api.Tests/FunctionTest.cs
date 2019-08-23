@@ -166,7 +166,6 @@ namespace got_your_money_dotnet_api.Tests
     }
 
 
-
     /// <summary>
     /// Create the DynamoDB table for testing. This table is deleted as part of the object dispose method.
     /// </summary>

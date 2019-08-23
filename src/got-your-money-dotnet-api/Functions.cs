@@ -72,11 +72,7 @@ namespace got_your_money_dotnet_api
     {
       context.Logger.LogLine("Getting expenses");
 
-      DateTime? dateFrom = null;
-      if (request.PathParameters != null && request.PathParameters.ContainsKey(DATE_FROM_QUERY_STRING_NAME))
-        dateFrom = DateTime.Parse(request.PathParameters[DATE_FROM_QUERY_STRING_NAME]);
-      else if (request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey(DATE_FROM_QUERY_STRING_NAME))
-        dateFrom = DateTime.Parse(request.QueryStringParameters[DATE_FROM_QUERY_STRING_NAME]);
+      DateTime? dateFrom = GetDateParam(request, DATE_FROM_QUERY_STRING_NAME);
 
       var scanConfig = new List<ScanCondition>();
 
@@ -198,6 +194,21 @@ namespace got_your_money_dotnet_api
       {
         StatusCode = (int)HttpStatusCode.OK
       };
+    }
+
+    private DateTime? GetDateParam(APIGatewayProxyRequest request, string queryString)
+    {
+      if (request.PathParameters != null && request.PathParameters.ContainsKey(queryString))
+      {
+        return DateTime.Parse(request.PathParameters[queryString]);
+      }
+
+      if (request.QueryStringParameters != null && request.QueryStringParameters.ContainsKey(queryString))
+      {
+        return DateTime.Parse(request.QueryStringParameters[queryString]);
+      }
+
+      return null;
     }
   }
 }
