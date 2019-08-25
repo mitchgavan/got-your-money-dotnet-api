@@ -89,7 +89,12 @@ namespace got_your_money_dotnet_api
       {
         StatusCode = (int)HttpStatusCode.OK,
         Body = JsonConvert.SerializeObject(page),
-        Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+        Headers = new Dictionary<string, string> {
+          { "Content-Type", "application/json" },
+          { "Access-Control-Allow-Origin", "*" },
+          { "Access-Control-Allow-Headers", "Content-Type,X-Amz-Date,Authorization,X-Api-Key,x-requested-with" },
+          { "Access-Control-Allow-Methods", "POST,GET,OPTIONS" },
+        },
       };
 
       return response;
